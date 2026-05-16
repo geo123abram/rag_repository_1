@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RAG Simulator</title>
+
+<style>
+    *{
+        margin:0;
+        padding:0;
+        box-sizing:border-box;
+        font-family: Inter, Arial, sans-serif;
+    }
+
+    body{
+        background:#0b1020;
+        color:#e2e8f0;
+        overflow-x:hidden;
+    }
+
+    .container{
+        width:95%;
+        max-width:1500px;
+        margin:auto;
+        padding:25px;
+    }
+
+    .hero{
+        text-align:center;
+        margin-bottom:30px;
+    }
+
+    .hero h1{
+        font-size:3rem;
+        background:linear-gradient(90deg,#38bdf8,#8b5cf6);
+        -webkit-background-clip:text;
+        -webkit-text-fill-color:transparent;
+        margin-bottom:10px;
+    }
+
+    .hero p{
+        color:#94a3b8;
+        max-width:900px;
+        margin:auto;
+        line-height:1.7;
+    }
+
+    .main-grid{
+        display:grid;
+        grid-template-columns:320px 1fr;
+        gap:25px;
+    }
+
+    .panel{
+        background:rgba(255,255,255,0.04);
+        border:1px solid rgba(255,255,255,0.08);
+        border-radius:20px;
+        padding:20px;
+        backdrop-filter:blur(8px);
+        box-shadow:0 8px 30px rgba(0,0,0,0.3);
+    }
+
+    .panel h2{
+        font-size:1.2rem;
+        margin-bottom:15px;
+        color:#7dd3fc;
+    }
+
+    textarea, input{
+        width:100%;
+        background:#111827;
+        border:1px solid #334155;
+        color:white;
+        border-radius:12px;
+        padding:14px;
+        margin-top:10px;
+        margin-bottom:15px;
+        resize:vertical;
+    }
+
+    button{
+        width:100%;
+        padding:14px;
+        border:none;
+        border-radius:14px;
+        cursor:pointer;
+        font-weight:700;
+        transition:0.3s;
+        background:linear-gradient(135deg,#06b6d4,#8b5cf6);
+        color:white;
+        font-size:1rem;
+    }
+
+    button:hover{
+        transform:translateY(-2px);
+        box-shadow:0 8px 25px rgba(139,92,246,0.4);
+    }
+
+    .steps{
+        display:grid;
+        grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+        gap:18px;
+    }
+
+    .step{
+        background:#111827;
+        border:1px solid #1e293b;
+        border-radius:18px;
+        padding:18px;
+        min-height:250px;
+        position:relative;
+        overflow:hidden;
+    }
+
+    .step::before{
+        content:"";
+        position:absolute;
+        width:120px;
+        height:120px;
+        background:rgba(139,92,246,0.15);
+        border-radius:50%;
+        top:-30px;
+        right:-30px;
+    }
+
+    .step-number{
+        width:42px;
+        height:42px;
+        border-radius:50%;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        background:linear-gradient(135deg,#06b6d4,#8b5cf6);
+        font-weight:bold;
+        margin-bottom:15px;
+    }
+
+    .step h3{
+        margin-bottom:12px;
+        color:#f8fafc;
+    }
+
+    .step p{
+        color:#94a3b8;
+        line-height:1.6;
+        font-size:0.95rem;
+    }
+
+    .output-box{
+        margin-top:14px;
+        background:#0f172a;
+        border:1px solid #334155;
+        padding:12px;
+        border-radius:12px;
+        font-size:0.92rem;
+        color:#cbd5e1;
+        max-height:220px;
+        overflow:auto;
+        white-space:pre-wrap;
+    }
+
+    .highlight{
+        color:#38bdf8;
+        font-weight:600;
+    }
+
+    .answer{
+        margin-top:20px;
+        background:linear-gradient(145deg,#111827,#1e293b);
+        border:1px solid #334155;
+        border-radius:18px;
+        padding:22px;
+    }
+
+    .answer h2{
+        color:#38bdf8;
+        margin-bottom:12px;
+    }
+
+    .chip{
+        display:inline-block;
+        background:#1e293b;
+        padding:6px 10px;
+        border-radius:999px;
+        margin:4px;
+        font-size:0.8rem;
+        color:#7dd3fc;
+        border:1px solid #334155;
+    }
+
+    .flow{
+        margin-top:30px;
+        display:flex;
+        justify-content:center;
+        flex-wrap:wrap;
+        gap:12px;
+    }
+
+    .flow div{
+        background:#111827;
+        padding:12px 16px;
+        border-radius:12px;
+        border:1px solid #334155;
+        font-size:0.9rem;
+    }
+
+    .arrow{
+        color:#8b5cf6;
+        font-weight:bold;
+        align-self:center;
+    }
+
+    .footer{
+        text-align:center;
+        margin-top:30px;
+        color:#64748b;
+        font-size:0.9rem;
+    }
+
+    @media(max-width:900px){
+        .main-grid{
+            grid-template-columns:1fr;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="hero">
+        <h1>RAG Simulator</h1>
+        <p>
+            Understand how Retrieval-Augmented Generation (RAG) works step-by-step.
+            This simulator demonstrates ingestion, chunking, embeddings, vector search,
+            retrieval, prompt augmentation, and final LLM response generation.
+        </p>
+    </div>
+
+    <div class="main-grid">
+
+        <!-- LEFT PANEL -->
+        <div class="panel">
+
+            <h2>📚 Knowledge Base</h2>
+
+            <textarea id="knowledge" rows="12">
+RAG stands for Retrieval-Augmented Generation.
+
+RAG combines Large Language Models with external knowledge retrieval.
+
+The retrieval process usually uses embeddings and vector databases.
+
+Embeddings convert text into numerical vectors representing semantic meaning.
+
+Vector databases store embeddings and allow similarity search.
+
+Chunking splits large documents into smaller pieces before embedding.
+
+When a user asks a question, the system retrieves the most relevant chunks.
+
+The retrieved chunks are inserted into the prompt sent to the language model.
+
+This helps reduce hallucination and improves factual accuracy.
+            </textarea>
+
+            <h2>❓ User Query</h2>
+
+            <input type="text" id="query" value="How does RAG reduce hallucination?" />
+
+            <button onclick="runRAG()">
+                Run RAG Pipeline
+            </button>
+
+            <div class="flow">
+                <div>Documents</div>
+                <div class="arrow">➜</div>
+                <div>Chunking</div>
+                <div class="arrow">➜</div>
+                <div>Embeddings</div>
+                <div class="arrow">➜</div>
+                <div>Retrieval</div>
+                <div class="arrow">➜</div>
+                <div>LLM</div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="panel">
+
+            <div class="steps">
+
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Document Chunking</h3>
+                    <p>
+                        Documents are split into smaller chunks so that retrieval becomes precise.
+                    </p>
+                    <div class="output-box" id="chunksOutput"></div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>Embedding Generation</h3>
+                    <p>
+                        Each chunk is converted into a numerical embedding vector.
+                    </p>
+                    <div class="output-box" id="embeddingOutput"></div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>Similarity Search</h3>
+                    <p>
+                        The query embedding is compared with document embeddings.
+                    </p>
+                    <div class="output-box" id="similarityOutput"></div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <h3>Retrieved Context</h3>
+                    <p>
+                        Most relevant chunks are retrieved from the vector database.
+                    </p>
+                    <div class="output-box" id="retrievedOutput"></div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">5</div>
+                    <h3>Prompt Augmentation</h3>
+                    <p>
+                        Retrieved chunks are injected into the final LLM prompt.
+                    </p>
+                    <div class="output-box" id="promptOutput"></div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">6</div>
+                    <h3>LLM Final Response</h3>
+                    <p>
+                        The language model answers using the retrieved knowledge.
+                    </p>
+                    <div class="output-box" id="answerOutput"></div>
+                </div>
+
+            </div>
+
+            <div class="answer">
+                <h2>🧠 Key RAG Concepts</h2>
+
+                <span class="chip">Chunking</span>
+                <span class="chip">Embeddings</span>
+                <span class="chip">Vector DB</span>
+                <span class="chip">Semantic Search</span>
+                <span class="chip">Prompt Injection</span>
+                <span class="chip">Grounded Responses</span>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="footer">
+        Interactive RAG Simulator • HTML + CSS + JavaScript • Single File Demo
+    </div>
+
+</div>
+
+<script>
+
+function tokenize(text){
+    return text
+        .toLowerCase()
+        .replace(/[^\w\s]/g,'')
+        .split(/\s+/)
+        .filter(Boolean);
+}
+
+function fakeEmbedding(text){
+    let words = tokenize(text);
+
+    let vector = [
+        words.length,
+        words.filter(w => w.includes("rag")).length,
+        words.filter(w => w.includes("retrieval")).length,
+        words.filter(w => w.includes("embedding")).length,
+        words.filter(w => w.includes("hallucination")).length,
+        words.filter(w => w.includes("vector")).length
+    ];
+
+    return vector;
+}
+
+function cosineSimilarity(vecA, vecB){
+
+    let dot = 0;
+    let magA = 0;
+    let magB = 0;
+
+    for(let i=0;i<vecA.length;i++){
+        dot += vecA[i] * vecB[i];
+        magA += vecA[i] * vecA[i];
+        magB += vecB[i] * vecB[i];
+    }
+
+    magA = Math.sqrt(magA);
+    magB = Math.sqrt(magB);
+
+    return dot / (magA * magB + 0.0001);
+}
+
+function runRAG(){
+
+    const knowledge = document.getElementById("knowledge").value;
+    const query = document.getElementById("query").value;
+
+    // STEP 1: CHUNKING
+    const chunks = knowledge
+        .split(/\n+/)
+        .map(c => c.trim())
+        .filter(Boolean);
+
+    document.getElementById("chunksOutput").innerHTML =
+        chunks.map((c,i)=>
+            `<span class="highlight">Chunk ${i+1}:</span> ${c}`
+        ).join("<br><br>");
+
+    // STEP 2: EMBEDDINGS
+    const embeddings = chunks.map(chunk => fakeEmbedding(chunk));
+
+    document.getElementById("embeddingOutput").innerHTML =
+        embeddings.map((e,i)=>
+            `<span class="highlight">Chunk ${i+1}:</span> [${e.join(", ")}]`
+        ).join("<br><br>");
+
+    // QUERY EMBEDDING
+    const queryEmbedding = fakeEmbedding(query);
+
+    // STEP 3: SIMILARITY
+    const scores = embeddings.map((emb,index)=>{
+
+        return {
+            chunk: chunks[index],
+            score: cosineSimilarity(queryEmbedding, emb)
+        };
+
+    });
+
+    scores.sort((a,b)=>b.score-a.score);
+
+    document.getElementById("similarityOutput").innerHTML =
+        scores.map((s,i)=>
+            `<span class="highlight">Rank ${i+1}</span><br>
+             Score: ${s.score.toFixed(3)}<br>
+             ${s.chunk}`
+        ).join("<br><br>");
+
+    // STEP 4: RETRIEVAL
+    const retrieved = scores.slice(0,2);
+
+    document.getElementById("retrievedOutput").innerHTML =
+        retrieved.map((r,i)=>
+            `<span class="highlight">Retrieved ${i+1}:</span><br>${r.chunk}`
+        ).join("<br><br>");
+
+    // STEP 5: PROMPT AUGMENTATION
+    const augmentedPrompt = `
+You are an AI assistant.
+
+Use the following retrieved knowledge:
+
+${retrieved.map(r=>"- " + r.chunk).join("\n")}
+
+Question:
+${query}
+
+Answer:
+`;
+
+    document.getElementById("promptOutput").textContent =
+        augmentedPrompt;
+
+    // STEP 6: FINAL RESPONSE
+    const finalAnswer =
+`RAG reduces hallucination by retrieving relevant external knowledge before generating a response.
+Instead of relying only on the model's internal memory, the LLM uses retrieved factual context.
+
+In this example, the system retrieved information about:
+- Retrieval of relevant chunks
+- Prompt injection
+- Improved factual grounding
+
+This makes the answer more accurate and context-aware.`;
+
+    document.getElementById("answerOutput").textContent =
+        finalAnswer;
+}
+
+runRAG();
+
+</script>
+
+</body>
+</html>
