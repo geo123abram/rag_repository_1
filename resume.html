@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>George Abraham | Futuristic Resume</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #050816;
+      --panel: rgba(17, 25, 40, 0.75);
+      --border: rgba(255,255,255,0.08);
+      --primary: #00e5ff;
+      --secondary: #8b5cf6;
+      --text: #f4f7fb;
+      --muted: #a7b2c5;
+      --success: #00ffa3;
+      --shadow: 0 10px 40px rgba(0, 229, 255, 0.15);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(circle at top left, rgba(0,229,255,0.15), transparent 30%),
+                  radial-gradient(circle at bottom right, rgba(139,92,246,0.2), transparent 25%),
+                  var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      z-index: -2;
+    }
+
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.35;
+      z-index: -1;
+      animation: float 12s ease-in-out infinite alternate;
+    }
+
+    .orb.one {
+      width: 260px;
+      height: 260px;
+      background: var(--primary);
+      top: -80px;
+      left: -80px;
+    }
+
+    .orb.two {
+      width: 320px;
+      height: 320px;
+      background: var(--secondary);
+      bottom: -120px;
+      right: -120px;
+      animation-delay: 2s;
+    }
+
+    @keyframes float {
+      from { transform: translateY(0px) translateX(0px); }
+      to { transform: translateY(30px) translateX(20px); }
+    }
+
+    .container {
+      width: min(1200px, 92%);
+      margin: auto;
+      padding: 40px 0 80px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 28px;
+      align-items: center;
+      margin-bottom: 28px;
+    }
+
+    .glass {
+      background: var(--panel);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero-left {
+      padding: 42px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-left::after {
+      content: '';
+      position: absolute;
+      width: 220px;
+      height: 220px;
+      background: radial-gradient(circle, rgba(0,229,255,0.25), transparent 70%);
+      top: -60px;
+      right: -60px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid rgba(0,229,255,0.35);
+      color: var(--primary);
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      margin-bottom: 22px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .tag::before {
+      content: '';
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 12px var(--success);
+    }
+
+    h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(2.8rem, 6vw, 5rem);
+      line-height: 1.05;
+      margin-bottom: 14px;
+    }
+
+    .gradient {
+      background: linear-gradient(90deg, #00e5ff, #7c4dff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .headline {
+      font-size: 1.15rem;
+      line-height: 1.8;
+      color: var(--muted);
+      max-width: 700px;
+      margin-bottom: 30px;
+    }
+
+    .cta-group {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 14px 22px;
+      border-radius: 14px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: 0.3s ease;
+      border: 1px solid transparent;
+    }
+
+    .btn-primary {
+      background: linear-gradient(90deg, #00e5ff, #7c4dff);
+      color: #020617;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 10px 24px rgba(0,229,255,0.25);
+    }
+
+    .btn-secondary {
+      border-color: rgba(255,255,255,0.12);
+      color: var(--text);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .hero-right {
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .metric {
+      padding: 22px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      transition: 0.3s ease;
+    }
+
+    .metric:hover {
+      transform: translateY(-4px);
+      border-color: rgba(0,229,255,0.3);
+    }
+
+    .metric h2 {
+      font-family: 'Orbitron', sans-serif;
+      color: var(--primary);
+      margin-bottom: 8px;
+      font-size: 2rem;
+    }
+
+    .metric p {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 24px;
+    }
+
+    .card {
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, transparent, rgba(255,255,255,0.03), transparent);
+      transform: translateX(-100%);
+      transition: 0.8s ease;
+    }
+
+    .card:hover::before {
+      transform: translateX(100%);
+    }
+
+    .col-8 { grid-column: span 8; }
+    .col-4 { grid-column: span 4; }
+    .col-6 { grid-column: span 6; }
+    .col-12 { grid-column: span 12; }
+
+    .section-title {
+      font-family: 'Orbitron', sans-serif;
+      margin-bottom: 24px;
+      font-size: 1.4rem;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      letter-spacing: 1px;
+    }
+
+    .section-title::before {
+      content: '';
+      width: 24px;
+      height: 2px;
+      background: linear-gradient(90deg, #00e5ff, #7c4dff);
+    }
+
+    .timeline {
+      position: relative;
+      padding-left: 28px;
+      border-left: 2px solid rgba(0,229,255,0.2);
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    .timeline-item {
+      position: relative;
+    }
+
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -38px;
+      top: 6px;
+      width: 16px;
+      height: 16px;
+      background: var(--primary);
+      border-radius: 50%;
+      box-shadow: 0 0 16px rgba(0,229,255,0.8);
+    }
+
+    .timeline-item h3 {
+      font-size: 1.15rem;
+      margin-bottom: 8px;
+    }
+
+    .timeline-item span {
+      color: var(--primary);
+      font-size: 0.9rem;
+      display: inline-block;
+      margin-bottom: 10px;
+    }
+
+    .timeline-item p,
+    .skill p,
+    .project p,
+    .contact-item p {
+      color: var(--muted);
+      line-height: 1.75;
+    }
+
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .skill {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.05);
+      padding: 18px;
+      border-radius: 18px;
+    }
+
+    .skill strong {
+      display: block;
+      margin-bottom: 8px;
+      color: white;
+    }
+
+    .project {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 20px;
+      padding: 22px;
+      margin-bottom: 18px;
+      transition: 0.3s ease;
+    }
+
+    .project:hover {
+      transform: translateY(-4px);
+      border-color: rgba(124,77,255,0.4);
+    }
+
+    .project h3 {
+      margin-bottom: 10px;
+      color: #ffffff;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .tags span {
+      background: rgba(0,229,255,0.08);
+      color: var(--primary);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      border: 1px solid rgba(0,229,255,0.18);
+    }
+
+    .contact-list {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .contact-item {
+      padding: 18px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .contact-item strong {
+      display: block;
+      margin-bottom: 6px;
+      color: white;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 50px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .cursor {
+      display: inline-block;
+      width: 10px;
+      height: 1.1em;
+      background: var(--primary);
+      margin-left: 4px;
+      animation: blink 0.9s infinite;
+      vertical-align: bottom;
+    }
+
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.8s ease;
+    }
+
+    .reveal.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 980px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .col-8,
+      .col-6,
+      .col-4 {
+        grid-column: span 12;
+      }
+    }
+
+    @media (max-width: 640px) {
+      h1 {
+        font-size: 2.5rem;
+      }
+
+      .hero-left,
+      .hero-right,
+      .card {
+        padding: 22px;
+      }
+
+      .skills-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="orb one"></div>
+  <div class="orb two"></div>
+
+  <div class="container">
+
+    <section class="hero">
+      <div class="hero-left glass reveal">
+        <div class="tag">Mission Ready • AI Driven • Strategic Thinker</div>
+
+        <h1>
+          George <span class="gradient">Abraham</span>
+        </h1>
+
+        <p class="headline" id="typing-text"></p>
+
+        <div class="cta-group">
+          <a href="#projects" class="btn btn-primary">Explore Projects</a>
+          <a href="#contact" class="btn btn-secondary">Connect</a>
+        </div>
+      </div>
+
+      <div class="hero-right glass reveal">
+        <div class="metric">
+          <h2>AI + Analytics</h2>
+          <p>Building practical machine learning, speech AI, and analytics solutions with a focus on real-world usability and scalable impact.</p>
+        </div>
+
+        <div class="metric">
+          <h2>Entrepreneurship</h2>
+          <p>Exploring AI-driven SaaS, analytics consulting for MSMEs, and technology-enabled customer experiences.</p>
+        </div>
+
+        <div class="metric">
+          <h2>Leadership</h2>
+          <p>Combining structured operational discipline with curiosity-driven innovation and long-term strategic execution.</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="grid">
+
+      <section class="card glass col-8 reveal">
+        <h2 class="section-title">Professional Profile</h2>
+
+        <p style="color: var(--muted); line-height: 1.9;">
+          Multifaceted professional with interests spanning artificial intelligence, machine learning, analytics consulting, speech technology, and product innovation. Experienced in building structured technical workflows, managing data-centric projects, and transforming complex ideas into scalable solutions. Passionate about combining analytical rigor, operational discipline, and futuristic user experiences to create meaningful technology products.
+        </p>
+      </section>
+
+      <section class="card glass col-4 reveal">
+        <h2 class="section-title">Core Domains</h2>
+
+        <div class="tags">
+          <span>Machine Learning</span>
+          <span>Speech AI</span>
+          <span>Python</span>
+          <span>FastAPI</span>
+          <span>Docker</span>
+          <span>Analytics</span>
+          <span>German NLP</span>
+          <span>CI/CD</span>
+          <span>Generative AI</span>
+          <span>Business Strategy</span>
+        </div>
+      </section>
+
+      <section class="card glass col-6 reveal">
+        <h2 class="section-title">Experience & Vision</h2>
+
+        <div class="timeline">
+
+          <div class="timeline-item">
+            <h3>AI & Speech Technology Projects</h3>
+            <span>Ongoing</span>
+            <p>
+              Developing German pronunciation assessment systems using wav2vec, GOP scoring, phoneme alignment, and deep learning pipelines for language learning applications.
+            </p>
+          </div>
+
+          <div class="timeline-item">
+            <h3>Analytics & Automation Consulting</h3>
+            <span>Business Initiative</span>
+            <p>
+              Designing analytics dashboards, automation workflows, and reporting systems targeted at Indian MSMEs using Tally and modern data tools.
+            </p>
+          </div>
+
+          <div class="timeline-item">
+            <h3>Technology-Driven Entrepreneurship</h3>
+            <span>Long-Term Vision</span>
+            <p>
+              Exploring AI-powered SaaS products, educational audio platforms, and customer-centric digital experiences with a focus on scalability and usability.
+            </p>
+          </div>
+
+        </div>
+      </section>
+
+      <section class="card glass col-6 reveal">
+        <h2 class="section-title">Technical Capabilities</h2>
+
+        <div class="skills-grid">
+
+          <div class="skill">
+            <strong>Artificial Intelligence</strong>
+            <p>LLMs, Speech AI, NLP workflows, pronunciation scoring systems, data preprocessing.</p>
+          </div>
+
+          <div class="skill">
+            <strong>Backend Development</strong>
+            <p>FastAPI, API integration, Dockerization, VPS deployment, GitHub Actions.</p>
+          </div>
+
+          <div class="skill">
+            <strong>Data & Analytics</strong>
+            <p>Trend analysis, automation, business dashboards, structured reporting systems.</p>
+          </div>
+
+          <div class="skill">
+            <strong>Infrastructure</strong>
+            <p>Ubuntu, NVIDIA CUDA environment setup, cloud GPU workflows, deployment pipelines.</p>
+          </div>
+
+        </div>
+      </section>
+
+      <section class="card glass col-12 reveal" id="projects">
+        <h2 class="section-title">Highlighted Projects</h2>
+
+        <div class="project">
+          <h3>German Pronunciation Evaluation Platform</h3>
+          <p>
+            AI-powered pronunciation assessment system designed to evaluate spoken German from Indian learners using phoneme-level analysis and speech embeddings.
+          </p>
+
+          <div class="tags">
+            <span>Wav2Vec 2.0</span>
+            <span>Forced Alignment</span>
+            <span>Deep Learning</span>
+            <span>German NLP</span>
+          </div>
+        </div>
+
+        <div class="project">
+          <h3>Textbook-to-Audiobook Workflow</h3>
+          <p>
+            End-to-end workflow converting educational PDFs into high-quality audiobook-ready text and speech pipelines with OCR correction and narration optimization.
+          </p>
+
+          <div class="tags">
+            <span>OCR Cleanup</span>
+            <span>Audio Automation</span>
+            <span>LLM Pipelines</span>
+            <span>Accessibility</span>
+          </div>
+        </div>
+
+        <div class="project">
+          <h3>Credit Classification API</h3>
+          <p>
+            Machine learning API deployed using FastAPI, Docker, GitHub Actions, and VPS infrastructure with plans for secure API gateway integration.
+          </p>
+
+          <div class="tags">
+            <span>FastAPI</span>
+            <span>Docker</span>
+            <span>CI/CD</span>
+            <span>ML Deployment</span>
+          </div>
+        </div>
+
+      </section>
+
+      <section class="card glass col-8 reveal">
+        <h2 class="section-title">Professional Strengths</h2>
+
+        <div class="tags">
+          <span>Strategic Thinking</span>
+          <span>Structured Problem Solving</span>
+          <span>Systems Design</span>
+          <span>Operational Discipline</span>
+          <span>Product Vision</span>
+          <span>Continuous Learning</span>
+          <span>Cross-Domain Integration</span>
+          <span>AI Adoption</span>
+          <span>Analytical Decision Making</span>
+          <span>Technology Leadership</span>
+        </div>
+      </section>
+
+      <section class="card glass col-4 reveal" id="contact">
+        <h2 class="section-title">Connect</h2>
+
+        <div class="contact-list">
+          <div class="contact-item">
+            <strong>Email</strong>
+            <p>your.email@example.com</p>
+          </div>
+
+          <div class="contact-item">
+            <strong>LinkedIn</strong>
+            <p>linkedin.com/in/yourprofile</p>
+          </div>
+
+          <div class="contact-item">
+            <strong>GitHub</strong>
+            <p>github.com/yourusername</p>
+          </div>
+
+          <div class="contact-item">
+            <strong>Location</strong>
+            <p>Kochi, Kerala, India</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <footer>
+      Designed as a futuristic interactive resume • Built with pure HTML, CSS & JavaScript
+    </footer>
+  </div>
+
+  <script>
+    const text = "AI enthusiast, analytics strategist, and technology-driven builder focused on speech AI, automation, and scalable digital products.";
+
+    let index = 0;
+    const target = document.getElementById('typing-text');
+
+    function typeEffect() {
+      if (index < text.length) {
+        target.innerHTML += text.charAt(index);
+        index++;
+        setTimeout(typeEffect, 28);
+      } else {
+        target.innerHTML += '<span class="cursor"></span>';
+      }
+    }
+
+    typeEffect();
+
+    const reveals = document.querySelectorAll('.reveal');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('active');
+        }
+      });
+    }, {
+      threshold: 0.15
+    });
+
+    reveals.forEach(el => observer.observe(el));
+
+    document.addEventListener('mousemove', (e) => {
+      const x = e.clientX / window.innerWidth;
+      const y = e.clientY / window.innerHeight;
+
+      document.querySelector('.orb.one').style.transform = `translate(${x * 20}px, ${y * 20}px)`;
+      document.querySelector('.orb.two').style.transform = `translate(-${x * 20}px, -${y * 20}px)`;
+    });
+  </script>
+</body>
+</html>
