@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RAG Pipeline Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;1,9..144,400&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f2eb;
+    --surface: #fffdf8;
+    --surface2: #f0ece0;
+    --border: rgba(60,45,20,0.12);
+    --border-strong: rgba(60,45,20,0.25);
+    --text: #1a1410;
+    --text-muted: #6b5c44;
+    --text-faint: #a8957c;
+    --accent: #3d2c8a;
+    --accent-light: #ebe8f8;
+    --accent-mid: #8b7dd8;
+    --green: #1a6644;
+    --green-light: #e2f0e8;
+    --amber: #7a4a08;
+    --amber-light: #fdf0d8;
+    --amber-mid: #e8a030;
+    --coral: #8a2a1a;
+    --coral-light: #fceae6;
+    --teal: #0d5c6e;
+    --teal-light: #e0f2f7;
+    --radius: 10px;
+    --radius-lg: 16px;
+    --font: 'Instrument Sans', sans-serif;
+    --font-serif: 'Fraunces', Georgia, serif;
+    --font-mono: 'DM Mono', monospace;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+    --shadow-lg: 0 2px 8px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06);
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* Subtle grain texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.5;
+  }
+
+  .wrap {
+    max-width: 840px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .header {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-strong);
+  }
+  .header-tag {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .header-tag::before {
+    content: '';
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+  }
+  .header h1 {
+    font-family: var(--font-serif);
+    font-size: 2.4rem;
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .header p {
+    font-size: 15px;
+    color: var(--text-muted);
+    max-width: 520px;
+  }
+
+  /* Pipeline nav */
+  .pipeline {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 2rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 6px;
+    overflow-x: auto;
+    box-shadow: var(--shadow);
+  }
+  .pipeline::-webkit-scrollbar { height: 0; }
+  .step-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 14px;
+    border: none;
+    border-radius: var(--radius);
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.18s;
+    min-width: 88px;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .step-btn:hover { background: var(--surface2); }
+  .step-btn.active { background: var(--accent-light); }
+  .step-btn.done { background: var(--green-light); }
+  .step-icon {
+    font-size: 19px;
+    color: var(--text-faint);
+    transition: color 0.18s;
+  }
+  .step-btn.active .step-icon { color: var(--accent); }
+  .step-btn.done .step-icon { color: var(--green); }
+  .step-label {
+    font-size: 10.5px;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-align: center;
+    white-space: nowrap;
+    letter-spacing: 0.01em;
+  }
+  .step-btn.active .step-label { color: var(--accent); }
+  .step-btn.done .step-label { color: var(--green); }
+  .step-num {
+    position: absolute;
+    top: 5px; right: 5px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text-faint);
+  }
+  .step-btn.active .step-num { color: var(--accent-mid); }
+  .step-btn.done .step-num { color: #5daa80; }
+  .pipe-arrow {
+    font-size: 13px;
+    color: var(--text-faint);
+    padding: 0 2px;
+    flex-shrink: 0;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.4rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow);
+  }
+  .card-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title i { font-size: 15px; }
+
+  /* Step description */
+  .step-desc {
+    font-size: 13.5px;
+    color: var(--text-muted);
+    line-height: 1.65;
+    margin-bottom: 1.1rem;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent-mid);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+  .step-desc strong { color: var(--text); font-weight: 600; }
+
+  /* Badges */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10.5px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+  }
+  .badge-purple { background: var(--accent-light); color: var(--accent); }
+  .badge-green { background: var(--green-light); color: var(--green); }
+  .badge-amber { background: var(--amber-light); color: var(--amber); }
+  .badge-teal { background: var(--teal-light); color: var(--teal); }
+
+  /* Document grid */
+  .doc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+  }
+  .doc-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.18s;
+    user-select: none;
+  }
+  .doc-card:hover { border-color: var(--border-strong); transform: translateY(-1px); box-shadow: var(--shadow); }
+  .doc-card.selected { background: var(--accent-light); border-color: var(--accent-mid); }
+  .doc-card .doc-name { font-weight: 600; color: var(--text); margin-bottom: 5px; display: flex; align-items: center; gap: 7px; }
+  .doc-card .doc-meta { font-size: 11px; color: var(--text-faint); font-family: var(--font-mono); }
+  .doc-card.selected .doc-meta { color: var(--accent-mid); }
+
+  /* Chunk list */
+  .chunk-list { display: flex; flex-direction: column; gap: 7px; max-height: 280px; overflow-y: auto; padding-right: 4px; }
+  .chunk-list::-webkit-scrollbar { width: 4px; }
+  .chunk-list::-webkit-scrollbar-track { background: var(--surface2); border-radius: 2px; }
+  .chunk-list::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+  .chunk-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 9px 12px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    line-height: 1.55;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    transition: all 0.2s;
+    animation: slideIn 0.2s ease both;
+  }
+  @keyframes slideIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:none; } }
+  .chunk-item.top-match { background: var(--accent-light); border-color: var(--accent-mid); color: var(--text); }
+  .chunk-id {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    font-weight: 500;
+    color: var(--text-faint);
+    min-width: 28px;
+    padding-top: 1px;
+  }
+  .chunk-item.top-match .chunk-id { color: var(--accent); }
+
+  /* Embeddings */
+  .embed-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px;
+  }
+  .embed-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 11px 12px;
+  }
+  .embed-label { font-size: 11.5px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .embed-sublabel { font-size: 10px; color: var(--text-faint); font-family: var(--font-mono); margin-bottom: 7px; }
+  .embed-nums { font-family: var(--font-mono); font-size: 9.5px; color: var(--text-faint); margin-bottom: 7px; line-height: 1.5; word-break: break-all; }
+  .embed-bars { display: flex; gap: 2px; height: 28px; align-items: flex-end; }
+  .embed-bar { border-radius: 2px 2px 0 0; transition: height 0.3s; }
+
+  /* Vector store */
+  .vstore-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 10px;
+  }
+  .vstore-doc { border-radius: var(--radius); padding: 12px; border: 1px solid; }
+  .vstore-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-top: 1px solid rgba(0,0,0,0.06); font-size: 11px; }
+  .vstore-cid { font-family: var(--font-mono); font-size: 9.5px; color: var(--text-faint); min-width: 24px; }
+  .vstore-bar-wrap { flex: 1; height: 4px; background: rgba(0,0,0,0.08); border-radius: 2px; overflow: hidden; }
+  .vstore-bar { height: 100%; border-radius: 2px; }
+  .vstore-val { font-family: var(--font-mono); font-size: 9.5px; color: var(--text-faint); min-width: 32px; text-align: right; }
+
+  /* Retrieval */
+  .query-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .query-input {
+    flex: 1;
+    padding: 9px 13px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-family: var(--font);
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .query-input:focus { border-color: var(--accent-mid); box-shadow: 0 0 0 3px rgba(141,125,216,0.15); }
+  .run-btn {
+    padding: 9px 18px;
+    border: 1px solid var(--accent-mid);
+    border-radius: var(--radius);
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font);
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .run-btn:hover { background: #d8d4f5; }
+  .run-btn:active { transform: scale(0.97); }
+  .example-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+  .example-chip {
+    font-size: 11.5px;
+    padding: 4px 11px;
+    border: 1px solid var(--border-strong);
+    border-radius: 20px;
+    background: var(--surface2);
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: var(--font);
+    transition: all 0.15s;
+  }
+  .example-chip:hover { background: var(--accent-light); border-color: var(--accent-mid); color: var(--accent); }
+
+  /* Similarity */
+  .sim-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .sim-row:last-child { border-bottom: none; }
+  .sim-label { font-size: 12px; color: var(--text-muted); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sim-label.top { color: var(--text); font-weight: 600; }
+  .sim-bar-wrap { flex: 2; height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .sim-bar { height: 100%; border-radius: 3px; transition: width 0.5s cubic-bezier(.2,.8,.3,1); }
+  .sim-score { font-family: var(--font-mono); font-size: 12px; font-weight: 500; min-width: 38px; text-align: right; }
+
+  /* Prompt box */
+  .prompt-box {
+    background: #1a1410;
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.75;
+    color: #c9b89a;
+    overflow-x: auto;
+  }
+  .pt-sys { color: #8b7dd8; font-weight: 500; }
+  .pt-ctx { color: #5daa80; font-weight: 500; }
+  .pt-usr { color: #e06c6c; font-weight: 500; }
+  .chunk-block {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-left: 2px solid #e8a030;
+    border-radius: 5px;
+    padding: 8px 10px;
+    margin: 5px 0;
+    font-size: 11.5px;
+    color: #d4c4a8;
+  }
+  .chunk-block-label { font-size: 10px; color: #e8a030; margin-bottom: 4px; }
+
+  /* Answer */
+  .answer-box {
+    background: var(--surface2);
+    border-radius: var(--radius);
+    padding: 16px;
+    font-size: 14.5px;
+    line-height: 1.75;
+    color: var(--text);
+    border-left: 3px solid var(--accent-mid);
+    min-height: 64px;
+  }
+  .typing-cursor::after {
+    content: '▋';
+    animation: blink 0.65s steps(1) infinite;
+    color: var(--accent-mid);
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  /* Nav buttons */
+  .nav-btns { display: flex; gap: 8px; margin-top: 1.2rem; flex-wrap: wrap; }
+  .nav-btn {
+    padding: 8px 16px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: var(--font);
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: var(--shadow);
+  }
+  .nav-btn:hover { background: var(--surface2); }
+  .nav-btn.primary { background: var(--accent-light); border-color: var(--accent-mid); color: var(--accent); }
+  .nav-btn.primary:hover { background: #d8d4f5; }
+
+  /* Progress indicator */
+  .progress-strip {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 1.4rem;
+  }
+  .progress-seg {
+    flex: 1;
+    height: 3px;
+    background: var(--border-strong);
+    border-radius: 2px;
+    transition: background 0.3s;
+  }
+  .progress-seg.done { background: var(--green); }
+  .progress-seg.active { background: var(--accent-mid); }
+
+  /* Misc */
+  em { font-style: italic; }
+  strong { font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div class="header-tag">Interactive Simulator</div>
+    <h1>RAG Pipeline</h1>
+    <p>Step through every stage of Retrieval-Augmented Generation — from raw documents to a grounded LLM answer.</p>
+  </div>
+
+  <div class="pipeline" id="pipeline" role="tablist" aria-label="RAG pipeline steps">
+    <button class="step-btn active" onclick="goStep(0)" id="sb0" role="tab" aria-selected="true" aria-controls="step-content">
+      <span class="step-num">01</span>
+      <i class="ti ti-files step-icon" aria-hidden="true"></i>
+      <span class="step-label">Documents</span>
+    </button>
+    <span class="pipe-arrow" aria-hidden="true">›</span>
+    <button class="step-btn" onclick="goStep(1)" id="sb1" role="tab" aria-selected="false">
+      <span class="step-num">02</span>
+      <i class="ti ti-scissors step-icon" aria-hidden="true"></i>
+      <span class="step-label">Chunking</span>
+    </button>
+    <span class="pipe-arrow" aria-hidden="true">›</span>
+    <button class="step-btn" onclick="goStep(2)" id="sb2" role="tab" aria-selected="false">
+      <span class="step-num">03</span>
+      <i class="ti ti-vector step-icon" aria-hidden="true"></i>
+      <span class="step-label">Embeddings</span>
+    </button>
+    <span class="pipe-arrow" aria-hidden="true">›</span>
+    <button class="step-btn" onclick="goStep(3)" id="sb3" role="tab" aria-selected="false">
+      <span class="step-num">04</span>
+      <i class="ti ti-database step-icon" aria-hidden="true"></i>
+      <span class="step-label">Vector Store</span>
+    </button>
+    <span class="pipe-arrow" aria-hidden="true">›</span>
+    <button class="step-btn" onclick="goStep(4)" id="sb4" role="tab" aria-selected="false">
+      <span class="step-num">05</span>
+      <i class="ti ti-search step-icon" aria-hidden="true"></i>
+      <span class="step-label">Retrieval</span>
+    </button>
+    <span class="pipe-arrow" aria-hidden="true">›</span>
+    <button class="step-btn" onclick="goStep(5)" id="sb5" role="tab" aria-selected="false">
+      <span class="step-num">06</span>
+      <i class="ti ti-sparkles step-icon" aria-hidden="true"></i>
+      <span class="step-label">Generation</span>
+    </button>
+  </div>
+
+  <div class="progress-strip" aria-hidden="true" id="progress-strip">
+    <div class="progress-seg active" id="ps0"></div>
+    <div class="progress-seg" id="ps1"></div>
+    <div class="progress-seg" id="ps2"></div>
+    <div class="progress-seg" id="ps3"></div>
+    <div class="progress-seg" id="ps4"></div>
+    <div class="progress-seg" id="ps5"></div>
+  </div>
+
+  <div id="step-content" role="tabpanel"></div>
+</div>
+
+<script>
+const DOCS = [
+  {
+    id:'doc1', name:'Solar System', icon:'ti-planet',
+    bg:'#ebe8f8', border:'#8b7dd8', text:'#3d2c8a',
+    chunks:[
+      {id:'C01', text:'The solar system consists of the Sun and eight planets. Mercury, Venus, Earth, and Mars are the rocky inner planets orbiting closest to the Sun.'},
+      {id:'C02', text:'Jupiter and Saturn are gas giants. Jupiter is the largest planet in our solar system and has at least 95 known moons, including the four large Galilean moons.'},
+      {id:'C03', text:'Uranus and Neptune are ice giants located in the outer solar system. Neptune has the strongest sustained winds of any planet, reaching 2,100 km/h.'},
+    ]
+  },
+  {
+    id:'doc2', name:'Machine Learning', icon:'ti-cpu',
+    bg:'#e0f2f7', border:'#4aa8c0', text:'#0d5c6e',
+    chunks:[
+      {id:'C04', text:'Machine learning enables computers to learn patterns from data without being explicitly programmed for each task. It relies on statistical and mathematical techniques.'},
+      {id:'C05', text:'Neural networks are computing systems loosely inspired by biological neurons. Deep learning uses many stacked layers to automatically learn hierarchical feature representations.'},
+      {id:'C06', text:'Supervised learning trains models on labeled example data. Key tasks include classification (predicting categories) and regression (predicting continuous values).'},
+    ]
+  },
+  {
+    id:'doc3', name:'Climate Change', icon:'ti-temperature',
+    bg:'#fdf0d8', border:'#e8a030', text:'#7a4a08',
+    chunks:[
+      {id:'C07', text:'Global average temperatures have risen 1.1°C since pre-industrial times, primarily driven by the accumulation of greenhouse gas emissions from human industrial activity.'},
+      {id:'C08', text:'Carbon dioxide and methane trap infrared radiation in the atmosphere, creating a greenhouse effect. Burning fossil fuels is responsible for the majority of CO₂ emissions.'},
+      {id:'C09', text:'Renewable energy sources such as solar panels and wind turbines produce electricity with minimal carbon emissions, offering a path to reduce climate change impacts.'},
+    ]
+  },
+  {
+    id:'doc4', name:'Human Biology', icon:'ti-heart-rate-monitor',
+    bg:'#fceae6', border:'#d4735a', text:'#8a2a1a',
+    chunks:[
+      {id:'C10', text:'The adult human body contains 206 bones and over 600 skeletal muscles. The skeleton provides structural support and protects vital internal organs from damage.'},
+      {id:'C11', text:'The human heart pumps blood through approximately 60,000 miles of blood vessels. It contracts around 100,000 times every single day to maintain circulation throughout the body.'},
+      {id:'C12', text:'The human brain contains approximately 86 billion neurons interconnected by trillions of synapses. This vast network enables cognition, memory formation, emotion, and consciousness.'},
+    ]
+  },
+];
+
+const ALL_CHUNKS = DOCS.flatMap(d => d.chunks.map(c => ({...c, docId:d.id, docName:d.name, docBg:d.bg, docBorder:d.border, docText:d.text})));
+const QUERIES = [
+  'How many moons does Jupiter have?',
+  'What causes global warming?',
+  'How does deep learning work?',
+  'How many times does the heart beat per day?',
+];
+const EMBED_PALETTE = ['#8b7dd8','#4aa8c0','#e8a030','#d4735a','#5daa80','#e06c6c','#63a8d8','#a8a848'];
+
+function pseudoEmbed(text) {
+  let h = 5381;
+  for (let i = 0; i < text.length; i++) h = ((h << 5) + h) ^ text.charCodeAt(i);
+  h = h >>> 0;
+  const v = [];
+  for (let i = 0; i < 8; i++) {
+    h = (h * 1664525 + 1013904223) >>> 0;
+    v.push((h % 75) + 15);
+  }
+  return v;
+}
+
+function cosineSim(a, b) {
+  const dot = a.reduce((s,v,i) => s + v * b[i], 0);
+  const ma = Math.sqrt(a.reduce((s,v) => s + v*v, 0));
+  const mb = Math.sqrt(b.reduce((s,v) => s + v*v, 0));
+  return dot / (ma * mb);
+}
+
+let step = 0;
+let selectedDocs = new Set(['doc1','doc2','doc3','doc4']);
+let query = QUERIES[0];
+let topChunks = [];
+
+function updateNav() {
+  for (let i = 0; i < 6; i++) {
+    const btn = document.getElementById('sb'+i);
+    btn.className = 'step-btn' + (i===step?' active':i<step?' done':'');
+    btn.setAttribute('aria-selected', i===step ? 'true' : 'false');
+    const seg = document.getElementById('ps'+i);
+    seg.className = 'progress-seg' + (i<step?' done':i===step?' active':'');
+  }
+}
+
+function goStep(n) {
+  step = n;
+  updateNav();
+  render();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function getActiveChunks() {
+  return ALL_CHUNKS.filter(c => selectedDocs.has(c.docId));
+}
+
+function render() {
+  const el = document.getElementById('step-content');
+  el.innerHTML = [s0,s1,s2,s3,s4,s5][step]();
+  if (step === 5) setTimeout(typeAnswer, 100);
+}
+
+/* ── Step 0: Documents ── */
+function s0() {
+  return `
+    <div class="step-desc"><strong>Step 1 — Document ingestion:</strong> RAG begins by loading your knowledge base. Documents can be PDFs, web pages, databases, or any text source. Select which documents to include below.</div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-files" aria-hidden="true"></i> Knowledge base <span class="badge badge-purple">${selectedDocs.size} / ${DOCS.length} selected</span></div>
+      <div class="doc-grid">
+        ${DOCS.map(d => `
+          <div class="doc-card ${selectedDocs.has(d.id)?'selected':''}" onclick="toggleDoc('${d.id}')" role="checkbox" aria-checked="${selectedDocs.has(d.id)}" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')toggleDoc('${d.id}')">
+            <div class="doc-name"><i class="ti ${d.icon}" aria-hidden="true" style="font-size:15px"></i>${d.name}</div>
+            <div class="doc-meta">${d.chunks.length} chunks · ${selectedDocs.has(d.id)?'✓ included':'click to add'}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    <div class="nav-btns">
+      <button class="nav-btn primary" onclick="goStep(1)">Next: Chunking <i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+    </div>`;
+}
+
+function toggleDoc(id) {
+  if (selectedDocs.has(id)) { if (selectedDocs.size > 1) selectedDocs.delete(id); }
+  else selectedDocs.add(id);
+  render();
+}
+
+/* ── Step 1: Chunking ── */
+function s1() {
+  const chunks = getActiveChunks();
+  return `
+    <div class="step-desc"><strong>Step 2 — Chunking:</strong> Long documents are split into smaller passages called <em>chunks</em>. Chunk size is critical — too large loses retrieval precision, too small loses context. Each chunk becomes one independently retrievable unit.</div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-scissors" aria-hidden="true"></i> Chunks produced <span class="badge badge-green">${chunks.length} chunks</span></div>
+      <div class="chunk-list">
+        ${chunks.map((c,i) => `
+          <div class="chunk-item" style="animation-delay:${i*0.03}s">
+            <span class="chunk-id">${c.id}</span>
+            <span>${c.text}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    <div class="nav-btns">
+      <button class="nav-btn" onclick="goStep(0)"><i class="ti ti-arrow-left" aria-hidden="true"></i> Back</button>
+      <button class="nav-btn primary" onclick="goStep(2)">Next: Embeddings <i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+    </div>`;
+}
+
+/* ── Step 2: Embeddings ── */
+function s2() {
+  const chunks = getActiveChunks().slice(0, 8);
+  return `
+    <div class="step-desc"><strong>Step 3 — Embedding:</strong> An embedding model converts each chunk into a dense vector — a list of numbers capturing semantic meaning. Texts with similar meaning produce similar vectors, enabling semantic search that goes far beyond keyword matching.</div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-vector" aria-hidden="true"></i> Chunk vectors <span style="font-size:11px;color:var(--text-faint);font-weight:400;font-family:var(--font-mono)">showing first ${chunks.length}</span></div>
+      <div class="embed-grid">
+        ${chunks.map((c, ci) => {
+          const vec = pseudoEmbed(c.text);
+          const col = EMBED_PALETTE[ci % EMBED_PALETTE.length];
+          const maxV = Math.max(...vec);
+          return `
+            <div class="embed-card">
+              <div class="embed-label">${c.id}</div>
+              <div class="embed-sublabel">${c.docName}</div>
+              <div class="embed-nums">[${vec.map(v=>(v/100).toFixed(2)).join(', ')}]</div>
+              <div class="embed-bars">
+                ${vec.map(v => `<div class="embed-bar" style="flex:1;height:${Math.round(v/maxV*100)}%;background:${col};opacity:${(0.35+v/maxV*0.65).toFixed(2)}"></div>`).join('')}
+              </div>
+            </div>`;
+        }).join('')}
+      </div>
+    </div>
+    <div class="nav-btns">
+      <button class="nav-btn" onclick="goStep(1)"><i class="ti ti-arrow-left" aria-hidden="true"></i> Back</button>
+      <button class="nav-btn primary" onclick="goStep(3)">Next: Vector Store <i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+    </div>`;
+}
+
+/* ── Step 3: Vector Store ── */
+function s3() {
+  const chunks = getActiveChunks();
+  const activeDocs = DOCS.filter(d => selectedDocs.has(d.id));
+  return `
+    <div class="step-desc"><strong>Step 4 — Vector store:</strong> All embeddings are persisted in a vector database such as Pinecone, Weaviate, Chroma, or pgvector. At query time, the database uses approximate nearest-neighbor algorithms (HNSW, FAISS) to find similar vectors in milliseconds — even across millions of entries.</div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-database" aria-hidden="true"></i> Indexed embeddings <span class="badge badge-purple">${chunks.length} vectors</span></div>
+      <div class="vstore-grid">
+        ${activeDocs.map(d => `
+          <div class="vstore-doc" style="background:${d.bg};border-color:${d.border}">
+            <div style="font-size:12px;font-weight:600;color:${d.text};margin-bottom:10px;display:flex;align-items:center;gap:6px">
+              <i class="ti ${d.icon}" aria-hidden="true" style="font-size:14px"></i>${d.name}
+            </div>
+            ${d.chunks.map(c => {
+              const vec = pseudoEmbed(c.text);
+              const norm = (vec.reduce((a,b)=>a+b,0) / (vec.length * 90));
+              return `
+              <div class="vstore-row">
+                <span class="vstore-cid">${c.id}</span>
+                <div class="vstore-bar-wrap"><div class="vstore-bar" style="width:${Math.round(norm*100)}%;background:${d.border}"></div></div>
+                <span class="vstore-val">${norm.toFixed(2)}</span>
+              </div>`;
+            }).join('')}
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    <div class="nav-btns">
+      <button class="nav-btn" onclick="goStep(2)"><i class="ti ti-arrow-left" aria-hidden="true"></i> Back</button>
+      <button class="nav-btn primary" onclick="goStep(4)">Next: Retrieval <i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+    </div>`;
+}
+
+/* ── Step 4: Retrieval ── */
+function s4() {
+  const chunks = getActiveChunks();
+  const qVec = pseudoEmbed(query);
+  const scored = chunks.map(c => ({...c, sim: cosineSim(pseudoEmbed(c.text), qVec)}))
+    .sort((a,b) => b.sim - a.sim);
+  topChunks = scored.slice(0,3);
+  const maxSim = scored[0].sim;
+  const colors = ['#8b7dd8','#a897e0','#c4bced'];
+
+  return `
+    <div class="step-desc"><strong>Step 5 — Retrieval:</strong> The user's query is embedded using the same model as the documents, then compared against every stored vector using cosine similarity. The top-K closest chunks are selected to serve as context for the language model.</div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-search" aria-hidden="true"></i> Query</div>
+      <div class="query-row">
+        <input class="query-input" id="qinput" type="text" value="${escQ(query)}" placeholder="Enter your question…" aria-label="Query" />
+        <button class="run-btn" onclick="runQ()"><i class="ti ti-player-play" aria-hidden="true"></i> Search</button>
+      </div>
+      <div class="example-chips">
+        ${QUERIES.map(q => `<button class="example-chip" onclick="setQ(${JSON.stringify(q)});runQ()" aria-label="Example: ${q}">${q}</button>`).join('')}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-list-numbers" aria-hidden="true"></i> Cosine similarity ranking <span class="badge badge-amber">top 3 retrieved ★</span></div>
+      ${scored.map((c,i) => `
+        <div class="sim-row">
+          <span class="sim-label ${i<3?'top':''}">${i<3?'★ ':''}${c.id}: ${c.text.substring(0,58)}…</span>
+          <div class="sim-bar-wrap"><div class="sim-bar" style="width:${(c.sim/maxSim*100).toFixed(1)}%;background:${i<3?colors[Math.min(i,2)]:'var(--border-strong)'}"></div></div>
+          <span class="sim-score" style="color:${i<3?'var(--accent)':'var(--text-faint)'}">${(c.sim*100).toFixed(1)}%</span>
+        </div>
+      `).join('')}
+    </div>
+    <div class="nav-btns">
+      <button class="nav-btn" onclick="goStep(3)"><i class="ti ti-arrow-left" aria-hidden="true"></i> Back</button>
+      <button class="nav-btn primary" onclick="goStep(5)">Next: Generation <i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+    </div>`;
+}
+
+function escQ(q) { return q.replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function setQ(q) { query = q; const inp = document.getElementById('qinput'); if(inp) inp.value = q; }
+function runQ() { const inp = document.getElementById('qinput'); if(inp) query = inp.value || query; goStep(4); }
+
+/* ── Step 5: Generation ── */
+const ANSWERS = {
+  'How many moons does Jupiter have?': 'Based on the retrieved context, Jupiter has at least 95 known moons — including the four large Galilean moons — making it the planet with the most confirmed natural satellites in our solar system. Jupiter is a gas giant and the largest planet.',
+  'What causes global warming?': 'According to the retrieved context, global warming is caused by greenhouse gas emissions from human industrial activity, primarily carbon dioxide and methane. These gases trap infrared radiation in the atmosphere. Burning fossil fuels is the main source of CO₂. Global temperatures have already risen 1.1°C since pre-industrial times.',
+  'How does deep learning work?': 'The retrieved context explains that deep learning uses neural networks with many stacked layers to automatically learn hierarchical feature representations from data. Neural networks are loosely inspired by biological neurons. Deep learning is a branch of machine learning, which uses statistical techniques to enable computers to learn from data without explicit programming.',
+  'How many times does the heart beat per day?': 'According to the retrieved context, the human heart beats approximately 100,000 times every day, pumping blood through around 60,000 miles of blood vessels to maintain circulation throughout the body.',
+};
+
+function s5() {
+  if (!topChunks.length) {
+    const chunks = getActiveChunks();
+    const qVec = pseudoEmbed(query);
+    topChunks = chunks.map(c => ({...c, sim:cosineSim(pseudoEmbed(c.text),qVec)}))
+      .sort((a,b)=>b.sim-a.sim).slice(0,3);
+  }
+  return `
+    <div class="step-desc"><strong>Step 6 — Generation:</strong> The top retrieved chunks are injected directly into the LLM's prompt as grounding context. The model generates an answer anchored to your documents — dramatically reducing hallucination compared to asking the LLM with no context.</div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-code" aria-hidden="true"></i> Prompt sent to LLM</div>
+      <div class="prompt-box">
+        <span class="pt-sys">[SYSTEM]</span> Answer the user's question using only the context provided. Be accurate and concise. If the context does not contain the answer, say so.<br><br>
+        <span class="pt-ctx">[CONTEXT]</span><br>
+        ${topChunks.map(c => `
+          <div class="chunk-block">
+            <div class="chunk-block-label">CHUNK ${c.id} — score: ${(c.sim*100).toFixed(1)}% — source: ${c.docName}</div>
+            ${c.text}
+          </div>`).join('')}
+        <br><span class="pt-usr">[USER]</span> ${query}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-sparkles" aria-hidden="true"></i> Generated answer</div>
+      <div class="answer-box" id="answer-box"><span id="answer-text"></span></div>
+    </div>
+    <div class="nav-btns">
+      <button class="nav-btn" onclick="goStep(4)"><i class="ti ti-arrow-left" aria-hidden="true"></i> Back</button>
+      <button class="nav-btn" onclick="goStep(0)"><i class="ti ti-refresh" aria-hidden="true"></i> Start over</button>
+    </div>`;
+}
+
+function typeAnswer() {
+  const el = document.getElementById('answer-text');
+  if (!el) return;
+  const text = ANSWERS[query] || `Based on the retrieved context for "${query}": the top-matching passages were identified by cosine similarity and injected as grounding context. The LLM synthesizes this retrieved information with its parametric knowledge to produce a factual, grounded response — this is the core value of RAG.`;
+  let i = 0;
+  el.textContent = '';
+  el.parentElement.className = 'answer-box typing-cursor';
+  const iv = setInterval(() => {
+    i += 4;
+    el.textContent = text.slice(0, i);
+    if (i >= text.length) {
+      el.textContent = text;
+      el.parentElement.className = 'answer-box';
+      clearInterval(iv);
+    }
+  }, 16);
+}
+
+render();
+</script>
+</body>
+</html>
